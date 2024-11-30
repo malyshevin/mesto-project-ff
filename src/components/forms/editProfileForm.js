@@ -1,5 +1,4 @@
-import { openPopup, closePopup } from "../modal";
-import { handleSubmit } from "../submit";
+import { openModal, closeModal } from "../modal";
 
 const profileEditButton = document.querySelector(".profile__edit-button");
 const editForm = document.querySelector('.popup_type_edit');
@@ -7,7 +6,7 @@ const editForm = document.querySelector('.popup_type_edit');
 export function initProfileEditButton() {
   profileEditButton.addEventListener("click", () => {
     setInitialEditProfileFormValues()
-    openPopup(editForm);
+    openModal(editForm);
   });
 
   editForm.addEventListener("submit", handleFormSubmit);
@@ -24,10 +23,10 @@ function setInitialEditProfileFormValues() {
 }
 
 function handleFormSubmit(event) {
-    handleSubmit(event, () => {
-        userNameElement.textContent = nameInput.value;
-        userJobElement.textContent = jobInput.value;
+  event.preventDefault();
 
-        closePopup(editForm);
-    })
+  userNameElement.textContent = nameInput.value;
+  userJobElement.textContent = jobInput.value;
+
+  closeModal(editForm);
 }

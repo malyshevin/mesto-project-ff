@@ -1,20 +1,8 @@
 export function getCards() {
-  return cards;
+  return initialCards
 }
 
-export function addCard(card, prepend=false) {
-  if (prepend) {
-    cards.unshift(card)
-  } else {
-    cards.append(card)
-  }
-}
-
-export function delCard(card) {
-  cards = cards.filter((el) => el.name !== card.name || el.link !== card.link)
-}
-
-let cards = [
+const initialCards = [
   {
     name: "Архыз",
     link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg",
