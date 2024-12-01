@@ -2,12 +2,33 @@ import "./pages/index.css";
 
 import { openModal, closeModal } from "./components/modal";
 import {
-  appendCard,
-  prependCard,
   createCard,
-  defaultCardCallbacks,
+  onDeleteCallback,
+  onLikeCallback,
 } from "./components/cards/card";
 import { getCards } from "./components/cards/cards";
+
+// получить ноду со списком карточек
+const placesList = document.querySelector(".places__list");
+
+// сформировать объект с коллбеками для карточки
+const cardCallbacks = {
+    onDelete: onDeleteCallback,
+    onLike: onLikeCallback,
+    onZoom: onZoomCallback,
+}
+
+// коллбек зума карточки
+const popupZoomCaption = document.querySelector(".popup__caption");
+const popupZoomImage = document.querySelector(".popup__image");
+const popupZoom = document.querySelector(".popup_type_image");
+function onZoomCallback(name, link) {
+  popupZoomImage.src = link;
+  popupZoomImage.alt = name;
+  popupZoomCaption.textContent = name;
+
+  openModal(popupZoom);
+};
 
 // забиндить открытие формы добавления карточки на нажатие кнопки добавления карточки
 const newCardButton = document.querySelector(".profile__add-button");
@@ -26,11 +47,14 @@ const newCardFormLink = newCardForm.elements.link;
 function handleNewCardFormSubmit(event) {
   event.preventDefault();
 
-  prependCard(
-    createCard({
-      name: newCardFormName.value,
-      link: newCardFormLink.value,
-    })
+  placesList.prepend(
+    createCard(
+      {
+        name: newCardFormName.value,
+        link: newCardFormLink.value,
+      },
+      cardCallbacks
+    )
   );
 
   closeModal(newCardPopup);
@@ -84,24 +108,7 @@ function handleOverlayClick(event) {
   }
 }
 
-// получить дефолтные коллбеки для карточки
-const cardCallbacks = defaultCardCallbacks();
-
-// перегрузить дефолтный коллбек зума карточки
-const popupZoomCaption = document.querySelector(".popup__caption");
-const popupZoomImage = document.querySelector(".popup__image");
-const popupZoom = document.querySelector(".popup_type_image");
-cardCallbacks.onZoom = (node) => {
-  const image = node.querySelector(".card__image");
-
-  popupZoomImage.src = image.src;
-  popupZoomImage.alt = image.alt;
-  popupZoomCaption.textContent = image.alt;
-
-  openModal(popupZoom);
-};
-
 // отобразить дефолтные карточки
 getCards().forEach((card) => {
-  appendCard(createCard(card, cardCallbacks));
+  placesList.appendChild(createCard(card, cardCallbacks));
 });
