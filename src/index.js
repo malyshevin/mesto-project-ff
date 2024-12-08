@@ -6,7 +6,7 @@ import {
   onDeleteCallback,
   onLikeCallback,
 } from "./components/cards/card";
-import { getCards } from "./components/cards/cards";
+import { getUser, getCards, patchUser, postCard, patchAvatar } from "./components/api";
 import { enableValidation, clearValidation, validationConfig } from "./components/validation";
 
 // выполнить инициализацию валидации формы
@@ -44,18 +44,45 @@ const newCardFormLink = newCardForm.elements.link;
 function handleNewCardFormSubmit(event) {
   event.preventDefault();
 
-  placesList.prepend(
-    createCard(
-      {
-        name: newCardFormName.value,
-        link: newCardFormLink.value,
-      },
-      cardCallbacks
-    )
-  );
+  const previousSubmitText = event.submitter.textContent;
+  event.submitter.textContent = "Добавление...";
 
-  closeModal(newCardPopup);
+  postCard(newCardFormName.value, newCardFormLink.value)
+    .then((card) => {
+      placesList.prepend(createCard(card, cardCallbacks, userId));
+      closeModal(newCardPopup);
+      newCardForm.reset();
+    })
+    .finally(() => {
+      event.submitter.textContent = previousSubmitText;
+    });
 }
+
+const changeAvatarForm = document.forms["edit-avatar"];
+changeAvatarForm.addEventListener("submit", handleChangeAvatarFormSubmit);
+
+const changeAvatarPopup = document.querySelector(".popup_type_avatar");
+function handleChangeAvatarFormSubmit(event) {
+  event.preventDefault();
+
+  const previousSubmitText = event.submitter.textContent;
+  event.submitter.textContent = "Обновление...";
+
+  patchAvatar(changeAvatarForm.elements["avatar-link"].value)
+    .then((res) => {
+      avatarImage.setAttribute("style", `background-image: url('${res.avatar}')`);
+      closeModal(changeAvatarPopup);
+    })
+    .finally(() => {
+      event.submitter.textContent = previousSubmitText;
+    });
+}
+
+const avatarImage = document.querySelector(".profile__image");
+avatarImage.addEventListener("click", () => {
+  clearValidation(changeAvatarForm, validationConfig);
+  openModal(changeAvatarPopup);
+});
 
 // забиндить открытие формы добавления карточки на нажатие кнопки добавления карточки
 const newCardButton = document.querySelector(".profile__add-button");
@@ -91,11 +118,20 @@ editProfileButton.addEventListener("click", () => {
 // обработчик отправки формы редактирования профиля
 function handleEditProfileFormSubmit(event) {
   event.preventDefault();
+  
+  const previousSubmitText = event.submitter.textContent;
+  event.submitter.textContent = "Сохранение...";
 
-  userNameElement.textContent = nameInput.value;
-  userJobElement.textContent = jobInput.value;
+  patchUser(nameInput.value, jobInput.value)
+    .then((user) => {
+      userNameElement.textContent = user.name;
+      userJobElement.textContent = user.about;
 
-  closeModal(editProfilePopup);
+      closeModal(editProfilePopup);
+    })
+    .finally(() => {
+      event.submitter.textContent = previousSubmitText;
+    });
 }
 
 // забиндить все попапы на закрытие при нажатии на оверлей или кнопку закрытия
@@ -114,7 +150,32 @@ function handleOverlayClick(event) {
   }
 }
 
-// отобразить дефолтные карточки
-getCards().forEach((card) => {
-  placesList.appendChild(createCard(card, cardCallbacks));
-});
+// Функция для установки информации о пользователе на страницу
+let userId = "";
+const userAvatarElement = document.querySelector(".profile__image");
+function setUserInfo(user) {
+  userNameElement.textContent = user.name;
+  userJobElement.textContent = user.about;
+  userAvatarElement.setAttribute(
+    "style",
+    `background-image: url('${user.avatar}')`
+  );
+  userId = user._id;
+}
+
+// Функция для рендеринга карточек на страницу
+function renderCards(cards, cardCallbacks, userID) {
+  placesList.innerHTML = "";
+  cards.forEach((card) => placesList.appendChild(createCard(card, cardCallbacks, userID)));
+  // placesList.appendChild(createCard(card, cardCallbacks, userID));
+}
+
+// Выполнение асинхронных запросов на сервер для получения информации о пользователе и карточек
+Promise.all([getUser(), getCards()])
+  .then(([user, cards]) => {
+    setUserInfo(user);
+    renderCards(cards, cardCallbacks, user._id);
+  })
+  .catch((err) => {
+    console.error("Произошла ошибка при получении данных:", err);
+  });
