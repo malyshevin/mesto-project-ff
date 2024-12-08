@@ -7,6 +7,10 @@ import {
   onLikeCallback,
 } from "./components/cards/card";
 import { getCards } from "./components/cards/cards";
+import { enableValidation, clearValidation, validationConfig } from "./components/validation";
+
+// выполнить инициализацию валидации формы
+enableValidation(validationConfig);
 
 // получить ноду со списком карточек
 const placesList = document.querySelector(".places__list");
@@ -29,13 +33,6 @@ function onZoomCallback(name, link) {
 
   openModal(popupZoom);
 };
-
-// забиндить открытие формы добавления карточки на нажатие кнопки добавления карточки
-const newCardButton = document.querySelector(".profile__add-button");
-const newCardPopup = document.querySelector(".popup_type_new-card");
-newCardButton.addEventListener("click", () => {
-  openModal(newCardPopup);
-});
 
 // установить логику отправки формы добавления карточки
 const newCardForm = document.forms["new-place"];
@@ -60,12 +57,12 @@ function handleNewCardFormSubmit(event) {
   closeModal(newCardPopup);
 }
 
-// забиндить открытие формы редактирования профиля на нажатие кнопки редактирования профиля
-const editProfileButton = document.querySelector(".profile__edit-button");
-const editProfilePopup = document.querySelector(".popup_type_edit");
-editProfileButton.addEventListener("click", () => {
-  prepareEditProfileForm();
-  openModal(editProfilePopup);
+// забиндить открытие формы добавления карточки на нажатие кнопки добавления карточки
+const newCardButton = document.querySelector(".profile__add-button");
+const newCardPopup = document.querySelector(".popup_type_new-card");
+newCardButton.addEventListener("click", () => {
+  clearValidation(newCardForm, validationConfig);
+  openModal(newCardPopup);
 });
 
 // установить логику отправки формы редактирования профиля
@@ -81,6 +78,15 @@ function prepareEditProfileForm() {
   nameInput.value = userNameElement.textContent;
   jobInput.value = userJobElement.textContent;
 }
+
+// забиндить открытие формы редактирования профиля на нажатие кнопки редактирования профиля
+const editProfileButton = document.querySelector(".profile__edit-button");
+const editProfilePopup = document.querySelector(".popup_type_edit");
+editProfileButton.addEventListener("click", () => {
+  clearValidation(editProfileForm, validationConfig);
+  prepareEditProfileForm();
+  openModal(editProfilePopup);
+});
 
 // обработчик отправки формы редактирования профиля
 function handleEditProfileFormSubmit(event) {
